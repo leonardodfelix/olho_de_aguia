@@ -1,0 +1,140 @@
+<!DOCTYPE html><html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Olho de Águia</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background: #f4f4f4;
+    }header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.preview {
+  display: flex;
+  justify-content: center;
+}
+
+canvas {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #ccc;
+}
+
+@media (min-width: 600px) {
+  .controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .controls label, .controls select, .controls input {
+    margin-right: 1rem;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Olho de Águia</h1>
+    <p>Simule os efeitos de miopia, astigmatismo, daltonismo e catarata em imagens.</p>
+  </header>  <main>
+    <section class="controls">
+      <label for="doenca">Escolha a condição visual:</label>
+      <select id="doenca">
+        <option value="miopia">Miopia</option>
+        <option value="astigmatismo">Astigmatismo</option>
+        <option value="daltonismo">Daltonismo</option>
+        <option value="catarata">Catarata</option>
+      </select><label for="intensidade">Intensidade:</label>
+  <input type="range" id="intensidade" min="0" max="100" value="50">
+
+  <label for="upload">Sua imagem:</label>
+  <input type="file" id="upload" accept="image/*">
+</section>
+
+<section class="preview">
+  <canvas id="canvas" width="300" height="300"></canvas>
+</section>
+
+  </main>  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const select = document.getElementById('doenca');
+    const range = document.getElementById('intensidade');
+    const upload = document.getElementById('upload');
+
+    let img = new Image();
+    img.src = 'https://via.placeholder.com/300x300.png?text=Imagem+Base';
+    img.onload = () => draw();
+
+    upload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        img = new Image();
+        img.onload = () => draw();
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    select.addEventListener('change', draw);
+    range.addEventListener('input', draw);
+
+    function draw() {
+      const effect = select.value;
+      const intensity = +range.value;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (effect === 'miopia') {
+        const blur = (intensity / 100) * 5; // até 5px de blur
+        ctx.filter = `blur(${blur}px)`;
+      } else if (effect === 'catarata') {
+        ctx.filter = `blur(${(intensity / 100) * 2}px) brightness(${1 - intensity / 200})`;
+      } else {
+        ctx.filter = 'none';
+      }
+
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      if (effect === 'daltonismo') {
+        applyDaltonismo(intensity);
+      }
+    }
+
+    function applyDaltonismo(intensity) {
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imgData.data;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        // Simples simulação de protanopia (reduz canal vermelho)
+        data[i] = r * (1 - intensity / 100);
+        data[i + 1] = g;
+        data[i + 2] = b;
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+    }
+  </script></body>
+</html>
