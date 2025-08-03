@@ -1,140 +1,732 @@
-<!DOCTYPE html><html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Olho de Águia</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 1rem;
-      background: #f4f4f4;
-    }header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Olho de Águia — Simulador Oftalmológico</title>
+    <meta
+      name="description"
+      content="Simulador interativo de miopia, astigmatismo, daltonismo e catarata."
+    />
+    <style>
+      :root {
+        --bg: #0e1116;
+        --card: #161a22;
+        --text: #e8edf2;
+        --muted: #a6b0bf;
+        --accent: #59b5ff;
+        --accent-2: #9bdbff;
+        --border: #222838;
+        --danger: #ff6b6b;
+      }
 
-.controls {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
+      * {
+        box-sizing: border-box;
+      }
 
-.preview {
-  display: flex;
-  justify-content: center;
-}
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: radial-gradient(1200px 800px at 20% 0%, #121622, #0b0e15)
+          fixed,
+          var(--bg);
+        color: var(--text);
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial,
+          sans-serif;
+        line-height: 1.5;
+      }
 
-canvas {
-  max-width: 100%;
-  height: auto;
-  border: 1px solid #ccc;
-}
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
 
-@media (min-width: 600px) {
-  .controls {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-  }
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 16px 16px 64px;
+      }
 
-  .controls label, .controls select, .controls input {
-    margin-right: 1rem;
-  }
-}
+      header {
+        padding: 16px 0 12px;
+      }
 
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Olho de Águia</h1>
-    <p>Simule os efeitos de miopia, astigmatismo, daltonismo e catarata em imagens.</p>
-  </header>  <main>
-    <section class="controls">
-      <label for="doenca">Escolha a condição visual:</label>
-      <select id="doenca">
-        <option value="miopia">Miopia</option>
-        <option value="astigmatismo">Astigmatismo</option>
-        <option value="daltonismo">Daltonismo</option>
-        <option value="catarata">Catarata</option>
-      </select><label for="intensidade">Intensidade:</label>
-  <input type="range" id="intensidade" min="0" max="100" value="50">
+      .title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
 
-  <label for="upload">Sua imagem:</label>
-  <input type="file" id="upload" accept="image/*">
-</section>
+      .title .logo {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #59b5ff, #8ad1ff 55%, #b9e6ff);
+        box-shadow: 0 10px 24px rgba(89, 181, 255, 0.25),
+          inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+        display: grid;
+        place-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .title .logo:before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          120px 80px at 65% 30%,
+          rgba(255, 255, 255, 0.35),
+          transparent 60%
+        );
+      }
+      .title .logo svg {
+        width: 22px;
+        height: 22px;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+      }
 
-<section class="preview">
-  <canvas id="canvas" width="300" height="300"></canvas>
-</section>
+      .subtitle {
+        color: var(--muted);
+        margin-top: 4px;
+        font-size: 0.98rem;
+      }
 
-  </main>  <script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const select = document.getElementById('doenca');
-    const range = document.getElementById('intensidade');
-    const upload = document.getElementById('upload');
+      .card {
+        background: linear-gradient(180deg, #141926, #121625);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22),
+          inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      }
 
-    let img = new Image();
-    img.src = 'https://via.placeholder.com/300x300.png?text=Imagem+Base';
-    img.onload = () => draw();
+      .controls {
+        display: grid;
+        gap: 12px;
+      }
 
-    upload.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        img = new Image();
-        img.onload = () => draw();
-        img.src = event.target.result;
+      .row {
+        display: grid;
+        gap: 10px;
+      }
+
+      label {
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      .select {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      select,
+      input[type="range"],
+      input[type="file"],
+      button {
+        width: 100%;
+        background: #0e1320;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+        outline: none;
+        transition: border 0.2s ease, box-shadow 0.2s ease, transform 0.05s;
+      }
+
+      select:focus,
+      input[type="range"]:focus,
+      input[type="file"]:focus,
+      button:focus {
+        border-color: #3b77ff;
+        box-shadow: 0 0 0 3px rgba(59, 119, 255, 0.15);
+      }
+
+      input[type="range"] {
+        -webkit-appearance: none;
+        height: 36px;
+        padding: 0 10px;
+      }
+      input[type="range"]::-webkit-slider-runnable-track {
+        height: 6px;
+        background: linear-gradient(90deg, #1b2132, #1a2130);
+        border-radius: 8px;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 22px;
+        height: 22px;
+        margin-top: -8px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #9bd2ff, #59b5ff);
+        border: 1px solid #2a5e9c;
+        box-shadow: 0 3px 10px rgba(89, 181, 255, 0.25);
+      }
+      input[type="range"]::-moz-range-track {
+        height: 6px;
+        background: linear-gradient(90deg, #1b2132, #1a2130);
+        border-radius: 8px;
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 22px;
+        height: 22px;
+        border: none;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #9bd2ff, #59b5ff);
+        box-shadow: 0 3px 10px rgba(89, 181, 255, 0.25);
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .viewer {
+        margin-top: 16px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .stage {
+        position: relative;
+        background: #0b0f19;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        aspect-ratio: 16 / 10;
+        min-height: 220px;
+      }
+
+      .stage .img-wrap,
+      .stage canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .img-wrap {
+        display: grid;
+        place-items: center;
+      }
+
+      .img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        filter: none;
+        transition: filter 0.12s linear;
+      }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .row-inline {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 12px;
+        background: #101527;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .btn:hover {
+        border-color: #2a3147;
+      }
+      .btn.secondary {
+        background: #0f1423;
+      }
+
+      .footer {
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 0.85rem;
+        text-align: center;
+      }
+
+      /* Desktop tweaks */
+      @media (min-width: 780px) {
+        .controls {
+          grid-template-columns: 300px 1fr;
+          gap: 16px;
+        }
+        .toolbar {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="title">
+          <span class="logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 4c4.5 0 8.7 2.6 10.8 6.7.2.4.2.9 0 1.3C20.7 16.1 16.5 18.7 12 18.7S3.3 16.1 1.2 12c-.2-.4-.2-.9 0-1.3C3.3 6.6 7.5 4 12 4Z"
+                stroke="#0b1222"
+                stroke-width="1.5"
+                fill="#e6f5ff"
+              />
+              <circle cx="12" cy="12" r="4.5" fill="#59b5ff" />
+              <circle cx="12" cy="12" r="2.2" fill="#0b1322" />
+            </svg>
+          </span>
+          Olho de Águia
+        </div>
+        <div class="subtitle">
+          Simule efeitos visuais de miopia, astigmatismo, daltonismo e catarata.
+        </div>
+      </header>
+
+      <main class="controls">
+        <section class="card">
+          <div class="row">
+            <label for="disease">Condição</label>
+            <div class="select">
+              <select id="disease" aria-label="Selecione a condição">
+                <option value="miopia" selected>Miopia</option>
+                <option value="astigmatismo">Astigmatismo</option>
+                <option value="daltonismo">Daltonismo</option>
+                <option value="catarata">Catarata</option>
+              </select>
+              <button id="resetBtn" class="btn secondary" type="button">
+                Resetar
+              </button>
+            </div>
+          </div>
+
+          <div class="row" id="intensityRow">
+            <label for="intensityLabel" id="intensityTitle">Intensidade</label>
+            <div class="row-inline">
+              <input
+                id="intensity"
+                type="range"
+                min="0"
+                max="100"
+                value="40"
+                step="1"
+                aria-labelledby="intensityTitle"
+              />
+              <span class="hint" id="intensityLabel">40%</span>
+            </div>
+            <div class="hint" id="intensityHelp">
+              Ajuste a intensidade/estágio conforme a condição selecionada.
+            </div>
+          </div>
+
+          <div class="row" id="typeRow" style="display: none">
+            <label for="typeSelect" id="typeLabel">Tipo</label>
+            <select id="typeSelect" aria-labelledby="typeLabel">
+              <option value="protanopia">Protanopia</option>
+              <option value="deuteranopia" selected>Deuteranopia</option>
+              <option value="tritanopia">Tritanopia</option>
+            </select>
+            <div class="hint">Selecione o tipo de daltonismo.</div>
+          </div>
+
+          <div class="row">
+            <label for="upload">Imagem</label>
+            <input
+              id="upload"
+              type="file"
+              accept="image/*"
+              aria-label="Enviar imagem"
+            />
+            <div class="hint">
+              Envie uma imagem para ver os efeitos. Por padrão, usamos uma
+              imagem demonstrativa.
+            </div>
+          </div>
+        </section>
+
+        <section class="viewer">
+          <div class="card stage" id="stage">
+            <div class="img-wrap">
+              <img
+                id="baseImg"
+                alt="Imagem demonstrativa para simulação visual"
+                src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1600&auto=format&fit=crop"
+                crossorigin="anonymous"
+              />
+            </div>
+            <canvas id="canvas"></canvas>
+          </div>
+
+          <div class="toolbar">
+            <button id="downloadBtn" class="btn" type="button">
+              Baixar resultado
+            </button>
+            <button id="toggleViewBtn" class="btn secondary" type="button">
+              Alternar imagem original/processada
+            </button>
+          </div>
+
+          <div class="footer">
+            Nota: Esta é uma simulação educativa aproximada e não substitui
+            avaliação profissional.
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      // Utilidades DOM
+      const $ = (s) => document.querySelector(s);
+
+      const diseaseEl = $("#disease");
+      const intensityEl = $("#intensity");
+      const intensityLabel = $("#intensityLabel");
+      const intensityTitle = $("#intensityTitle");
+      const intensityHelp = $("#intensityHelp");
+      const typeRow = $("#typeRow");
+      const typeSelect = $("#typeSelect");
+      const uploadEl = $("#upload");
+      const baseImg = $("#baseImg");
+      const canvas = $("#canvas");
+      const stage = $("#stage");
+      const resetBtn = $("#resetBtn");
+      const toggleViewBtn = $("#toggleViewBtn");
+      const downloadBtn = $("#downloadBtn");
+
+      const ctx = canvas.getContext("2d");
+
+      // Estado
+      const state = {
+        disease: "miopia",
+        intensity: 40, // 0..100
+        colorType: "deuteranopia",
+        showProcessed: true,
+        image: null, // HTMLImageElement
       };
-      reader.readAsDataURL(file);
-    });
 
-    select.addEventListener('change', draw);
-    range.addEventListener('input', draw);
-
-    function draw() {
-      const effect = select.value;
-      const intensity = +range.value;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      if (effect === 'miopia') {
-        const blur = (intensity / 100) * 5; // até 5px de blur
-        ctx.filter = `blur(${blur}px)`;
-      } else if (effect === 'catarata') {
-        ctx.filter = `blur(${(intensity / 100) * 2}px) brightness(${1 - intensity / 200})`;
-      } else {
-        ctx.filter = 'none';
+      function clamp(v, min, max) {
+        return Math.max(min, Math.min(max, v));
       }
 
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-      if (effect === 'daltonismo') {
-        applyDaltonismo(intensity);
-      }
-    }
-
-    function applyDaltonismo(intensity) {
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imgData.data;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-
-        // Simples simulação de protanopia (reduz canal vermelho)
-        data[i] = r * (1 - intensity / 100);
-        data[i + 1] = g;
-        data[i + 2] = b;
+      function resizeCanvasToStage() {
+        const rect = stage.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(rect.width * dpr);
+        canvas.height = Math.floor(rect.height * dpr);
+        canvas.style.width = rect.width + "px";
+        canvas.style.height = rect.height + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
 
-      ctx.putImageData(imgData, 0, 0);
-    }
-  </script></body>
+      function loadImageFromFile(file) {
+        return new Promise((resolve, reject) => {
+          const url = URL.createObjectURL(file);
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => {
+            URL.revokeObjectURL(url);
+            resolve(img);
+          };
+          img.onerror = reject;
+          img.src = url;
+        });
+      }
+
+      function imageToCanvas(img) {
+        const rect = stage.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        // Desenha a imagem "cover" no canvas
+        const ratio = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+        const dw = img.naturalWidth * ratio;
+        const dh = img.naturalHeight * ratio;
+        const dx = (w - dw) / 2;
+        const dy = (h - dh) / 2;
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(img, dx, dy, dw, dh);
+      }
+
+      // Simulações
+      // Daltonismo: matrizes aproximadas (Brettel/Viénot/Vienot simplificado)
+      const colorBlindMatrices = {
+        protanopia: [
+          0.56667, 0.43333, 0.0, 0.55833, 0.44167, 0.0, 0.0, 0.24167, 0.75833,
+        ],
+        deuteranopia: [
+          0.625, 0.375, 0.0, 0.7, 0.3, 0.0, 0.0, 0.3, 0.7,
+        ],
+        tritanopia: [
+          0.95, 0.05, 0.0, 0.0, 0.43333, 0.56667, 0.0, 0.475, 0.525,
+        ],
+      };
+
+      function applyColorMatrix(imgData, mat, strength) {
+        const d = imgData.data;
+        const [m00, m01, m02, m10, m11, m12, m20, m21, m22] = mat;
+        // strength 0..1: interpolação entre original e transformado
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i];
+          const g = d[i + 1];
+          const b = d[i + 2];
+          const tr = m00 * r + m01 * g + m02 * b;
+          const tg = m10 * r + m11 * g + m12 * b;
+          const tb = m20 * r + m21 * g + m22 * b;
+          d[i] = r + (tr - r) * strength;
+          d[i + 1] = g + (tg - g) * strength;
+          d[i + 2] = b + (tb - b) * strength;
+        }
+        return imgData;
+      }
+
+      // Blur gaussiano aproximado via canvas para miopia/catarata
+      function applyCanvasBlur(amountPx) {
+        // Fallback com multiple passes (box blur) para navegadores sem ctx.filter
+        const supportsFilter = "filter" in ctx;
+        if (supportsFilter) {
+          ctx.filter = `blur(${amountPx}px)`;
+        }
+      }
+
+      function clearCanvasFilter() {
+        ctx.filter = "none";
+      }
+
+      // Blur direcional simples (astigmatismo)
+      function directionalBlurPass(imgData, dirX, dirY, radius) {
+        const { width, height, data } = imgData;
+        const out = new Uint8ClampedArray(data.length);
+        const step = 1; // pixel step
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            let r = 0,
+              g = 0,
+              b = 0,
+              a = 0,
+              wsum = 0;
+            for (let t = -radius; t <= radius; t++) {
+              const sx = Math.round(x + dirX * t);
+              const sy = Math.round(y + dirY * t);
+              if (sx < 0 || sy < 0 || sx >= width || sy >= height) continue;
+              const idx = (sy * width + sx) * 4;
+              const w = 1; // box blur
+              r += data[idx] * w;
+              g += data[idx + 1] * w;
+              b += data[idx + 2] * w;
+              a += data[idx + 3] * w;
+              wsum += w;
+            }
+            const o = (y * width + x) * 4;
+            out[o] = r / wsum;
+            out[o + 1] = g / wsum;
+            out[o + 2] = b / wsum;
+            out[o + 3] = a / wsum;
+          }
+        }
+        return new ImageData(out, width, height);
+      }
+
+      function astigmatismEffect(baseData, strength) {
+        // strength 0..1. Faz dois passes: um horizontal e outro vertical com pesos diferentes.
+        const maxRadius = 10; // performance-friendly
+        const r1 = Math.max(1, Math.round(maxRadius * strength));
+        const r2 = Math.max(0, Math.round((maxRadius * strength) / 3));
+
+        // Direção principal (horizontal) e secundária (leve vertical)
+        let pass1 = directionalBlurPass(baseData, 1, 0, r1);
+        if (r2 > 0) {
+          pass1 = directionalBlurPass(pass1, 0, 1, r2);
+        }
+        return pass1;
+      }
+
+      function cataractEffect(imgData, strength) {
+        // Combina leve blur + haze (elevação dos médios) + redução de contraste
+        const w = canvas.width;
+        const h = canvas.height;
+
+        // Desfoque leve via ctx.filter quando possível para performance
+        const px = Math.round(2 + strength * 6);
+        const off = document.createElement("canvas");
+        off.width = w;
+        off.height = h;
+        const octx = off.getContext("2d");
+        octx.filter = `blur(${px}px)`;
+        octx.drawImage(canvas, 0, 0, w, h);
+        let blurred = octx.getImageData(0, 0, w, h);
+
+        const d = blurred.data;
+        const haze = 0.1 + strength * 0.35; // adiciona branco
+        const contrast = 1 - strength * 0.4; // reduz contraste
+        const midpoint = 128;
+
+        for (let i = 0; i < d.length; i += 4) {
+          // haze
+          d[i] = d[i] + (255 - d[i]) * haze;
+          d[i + 1] = d[i + 1] + (255 - d[i + 1]) * haze;
+          d[i + 2] = d[i + 2] + (255 - d[i + 2]) * haze;
+          // contraste
+          d[i] = (d[i] - midpoint) * contrast + midpoint;
+          d[i + 1] = (d[i + 1] - midpoint) * contrast + midpoint;
+          d[i + 2] = (d[i + 2] - midpoint) * contrast + midpoint;
+        }
+        return blurred;
+      }
+
+      function render() {
+        resizeCanvasToStage();
+        const img = state.image || baseImg;
+
+        // 1) Primeiro desenha base no canvas
+        clearCanvasFilter();
+        imageToCanvas(img);
+
+        const w = canvas.width;
+        const h = canvas.height;
+
+        const strength = clamp(state.intensity / 100, 0, 1);
+
+        if (state.disease === "miopia") {
+          // Usa blur CSS com ctx.filter para eficiência
+          clearCanvasFilter();
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          applyCanvasBlur(Math.round(strength * 10)); // 0..10px
+          imageToCanvas(img);
+          clearCanvasFilter();
+        } else if (state.disease === "astigmatismo") {
+          // Pega pixels, aplica blur direcional
+          let imgData = ctx.getImageData(0, 0, w, h);
+          imgData = astigmatismEffect(imgData, strength);
+          ctx.putImageData(imgData, 0, 0);
+        } else if (state.disease === "daltonismo") {
+          let imgData = ctx.getImageData(0, 0, w, h);
+          const mat = colorBlindMatrices[state.colorType];
+          imgData = applyColorMatrix(imgData, mat, strength);
+          ctx.putImageData(imgData, 0, 0);
+        } else if (state.disease === "catarata") {
+          // base -> blur leve + haze/contraste
+          let imgData = ctx.getImageData(0, 0, w, h);
+          ctx.putImageData(imgData, 0, 0); // já desenhado
+          const processed = cataractEffect(imgData, strength);
+          ctx.putImageData(processed, 0, 0);
+        }
+
+        // Alternância exibição
+        const showProcessed = state.showProcessed;
+        canvas.style.opacity = showProcessed ? "1" : "0";
+      }
+
+      function updateUIForDisease() {
+        const d = state.disease;
+        if (d === "daltonismo") {
+          typeRow.style.display = "";
+          intensityTitle.textContent = "Intensidade";
+          intensityHelp.textContent =
+            "Ajuste a intensidade do daltonismo simulado.";
+        } else if (d === "astigmatismo") {
+          typeRow.style.display = "none";
+          intensityTitle.textContent = "Intensidade (desfoque direcional)";
+          intensityHelp.textContent =
+            "Aumente para ver o desfoque mais alongado em uma direção.";
+        } else if (d === "miopia") {
+          typeRow.style.display = "none";
+          intensityTitle.textContent = "Intensidade (desfoque)";
+          intensityHelp.textContent =
+            "Simula o desfoque de objetos distantes visto na miopia.";
+        } else if (d === "catarata") {
+          typeRow.style.display = "none";
+          intensityTitle.textContent = "Estágio";
+          intensityHelp.textContent =
+            "Mistura de desfoque, véu esbranquiçado e menor contraste.";
+        }
+      }
+
+      // Eventos
+      diseaseEl.addEventListener("change", (e) => {
+        state.disease = e.target.value;
+        updateUIForDisease();
+        render();
+      });
+
+      intensityEl.addEventListener("input", (e) => {
+        state.intensity = parseInt(e.target.value, 10);
+        intensityLabel.textContent = state.intensity + "%";
+        render();
+      });
+
+      typeSelect.addEventListener("change", (e) => {
+        state.colorType = e.target.value;
+        render();
+      });
+
+      uploadEl.addEventListener("change", async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+          const img = await loadImageFromFile(file);
+          state.image = img;
+          baseImg.src = img.src; // mantém visuais sincronizados ao alternar
+          render();
+        } catch (err) {
+          alert("Falha ao carregar a imagem. Tente outro arquivo.");
+          console.error(err);
+        }
+      });
+
+      resetBtn.addEventListener("click", () => {
+        state.disease = "miopia";
+        diseaseEl.value = state.disease;
+        state.intensity = 40;
+        intensityEl.value = "40";
+        intensityLabel.textContent = "40%";
+        state.colorType = "deuteranopia";
+        typeSelect.value = "deuteranopia";
+        state.showProcessed = true;
+        updateUIForDisease();
+        render();
+      });
+
+      toggleViewBtn.addEventListener("click", () => {
+        state.showProcessed = !state.showProcessed;
+        render();
+      });
+
+      downloadBtn.addEventListener("click", () => {
+        const a = document.createElement("a");
+        a.download = `olho-de-aguia-${state.disease}.png`;
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+      });
+
+      window.addEventListener("resize", render);
+
+      // Inicialização
+      baseImg.addEventListener("load", () => {
+        render();
+      });
+
+      // Primeira renderização
+      updateUIForDisease();
+      render();
+    </script>
+  </body>
 </html>
