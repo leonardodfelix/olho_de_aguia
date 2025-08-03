@@ -31,8 +31,8 @@
       background: radial-gradient(1200px 800px at 20% 0%, #121622, #0b0e15) fixed,
         var(--bg);
       color: var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter,
-        Arial, sans-serif;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial,
+        sans-serif;
       line-height: 1.5;
     }
 
@@ -54,29 +54,14 @@
 
     .logo-row {
       display: grid;
-      gap: 12px;
+      gap: 6px;
     }
 
+    /* Logo fluida e responsiva */
     .logo-eye {
-      width: 240px;
-      max-width: 80vw;
+      width: clamp(180px, 32vw, 320px);
       height: auto;
       display: block;
-    }
-
-    .logo-variants {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-      width: 100%;
-    }
-
-    .logo-variants svg {
-      width: 100%;
-      height: auto;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: #0f1423;
     }
 
     .subtitle {
@@ -121,7 +106,7 @@
 
     .controls {
       display: grid;
-      gap: 12px;
+      gap: 16px;
     }
 
     label {
@@ -221,7 +206,7 @@
       border-radius: 14px;
       overflow: hidden;
       aspect-ratio: 16 / 10;
-      min-height: 220px;
+      min-height: 200px;
     }
 
     .stage .img-wrap,
@@ -271,7 +256,7 @@
     }
 
     .footer {
-      margin-top: 20px;
+      margin-top: 12px;
       color: var(--muted);
       font-size: 0.85rem;
       text-align: center;
@@ -301,18 +286,20 @@
       padding-left: 18px;
     }
 
-    @media (min-width: 780px) {
-      .controls {
-        grid-template-columns: 320px 1fr;
-        gap: 16px;
-      }
-
+    /* Botões lado a lado em telas médias+ */
+    @media (min-width: 520px) {
       .toolbar {
         grid-template-columns: 1fr 1fr;
+        gap: 10px;
       }
+    }
 
-      .logo-variants {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
+    /* Layout duas colunas em telas largas */
+    @media (min-width: 780px) {
+      .controls {
+        grid-template-columns: 360px 1fr;
+        gap: 16px;
+        align-items: start;
       }
     }
   </style>
@@ -323,27 +310,36 @@
     <header>
       <div class="brand" aria-label="Olho de Águia">
         <div class="logo-row">
-          <svg class="logo-eye" viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg" role="img"
+          <!-- Logo nova, limpa e responsiva -->
+          <svg class="logo-eye" viewBox="0 0 520 220" xmlns="http://www.w3.org/2000/svg" role="img"
             aria-labelledby="logoTitle">
             <title id="logoTitle">Olho de Águia — ODS 3</title>
 
-            <g transform="translate(60,20) scale(1)">
-              <path d="M40 40c18-22 46-22 64 0-10 0-18 3-24 8 13-2 22 2 30 8-20 0-34 10-56 2-7-3-11-7-14-18Z"
-                fill="#0b0b0b" />
-            </g>
-            <g transform="translate(196,20) scale(1)">
-              <path d="M40 40c18-22 46-22 64 0-10 0-18 3-24 8 13-2 22 2 30 8-20 0-34 10-56 2-7-3-11-7-14-18Z"
-                fill="#0b0b0b" />
+            <!-- dourado em gradiente leve (opcional, mas bonito) -->
+            <defs>
+              <linearGradient id="gold" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#f2d074" />
+                <stop offset="55%" stop-color="#d9b24c" />
+                <stop offset="100%" stop-color="#b9912f" />
+              </linearGradient>
+            </defs>
+
+            <!-- Olhos -->
+            <g fill="#0b0b0b" stroke="#0b0b0b" stroke-width="2">
+              <!-- esquerdo -->
+              <path d="M95 56c26-24 63-23 88 1-14 1-26 6-34 14 16-4 29 1 39 8-28 2-48 16-78 5-10-4-15-10-15-28Z" />
+              <!-- direito espelhado -->
+              <g transform="translate(425,70) scale(-1,1) translate(-95,-14)">
+                <path d="M95 56c26-24 63-23 88 1-14 1-26 6-34 14 16-4 29 1 39 8-28 2-48 16-78 5-10-4-15-10-15-28Z" />
+              </g>
             </g>
 
-            <g font-family="Georgia, 'Times New Roman', serif" text-anchor="middle">
-              <text x="180" y="105" font-size="64" fill="#d4ad47" font-weight="700">
-                LH
-              </text>
-              <text x="180" y="145" font-size="36" fill="#d4ad47" font-weight="700">
-                DE
-              </text>
-              <text x="180" y="190" font-size="58" fill="#d4ad47" font-weight="700">
+            <!-- Texto -->
+            <g font-family="Georgia, 'Times New Roman', serif" text-anchor="middle" fill="url(#gold)"
+              style="letter-spacing: 0.5px">
+              <text x="260" y="106" font-size="70" font-weight="700">LH</text>
+              <text x="260" y="140" font-size="40" font-weight="700">DE</text>
+              <text x="260" y="190" font-size="62" font-weight="700">
                 ÁGUIA
               </text>
             </g>
@@ -363,7 +359,7 @@
     </header>
 
     <main class="controls">
-      <!-- Lateral: controles e conteúdo educativo -->
+      <!-- Coluna esquerda: controles, upload e simulador -->
       <section class="card grid">
         <div class="row">
           <label for="disease">Condição</label>
@@ -412,8 +408,8 @@
           </div>
         </div>
 
-
-        <section class="viewer">
+        <!-- Viewer logo após o upload -->
+        <div class="viewer">
           <div class="card stage" id="stage">
             <div class="img-wrap">
               <img id="baseImg" alt="Imagem demonstrativa para simulação visual"
@@ -436,14 +432,14 @@
             Nota: Simulação educativa aproximada; não substitui avaliação
             profissional.
           </div>
-        </section>
+        </div>
 
         <div class="card edu">
           <h2>ODS 3: Saúde e Bem-Estar</h2>
           <p>
-            A ODS 3 busca garantir vidas saudáveis e promover o bem-estar
-            para todos. Cuidar da visão faz parte desse objetivo, pois enxergar
-            bem ajuda no aprendizado, segurança e qualidade de vida.
+            A ODS 3 busca garantir vidas saudáveis e promover o bem-estar para
+            todos. Cuidar da visão faz parte desse objetivo, pois enxergar bem
+            ajuda no aprendizado, segurança e qualidade de vida.
           </p>
           <ul>
             <li>
@@ -454,10 +450,12 @@
               Proteja os olhos do sol com boné/óculos com proteção UV.
             </li>
             <li>
-              Mantenha distância adequada de telas e faça pausas: regra 20-20-20.
+              Mantenha distância adequada de telas e faça pausas: regra
+              20-20-20.
             </li>
             <li>
-              Tenha alimentação equilibrada (vitaminas A, C, E ajudam a visão).
+              Tenha alimentação equilibrada (vitaminas A, C, E ajudam a
+              visão).
             </li>
             <li>
               Procure orientação médica se notar dificuldade para enxergar.
@@ -483,6 +481,9 @@
           </ul>
         </div>
       </section>
+
+      <!-- Coluna direita (vazia por enquanto, pode receber mais conteúdo no futuro) -->
+      <div></div>
     </main>
   </div>
 
@@ -555,16 +556,13 @@
       ctx.drawImage(img, dx, dy, dw, dh);
     }
 
+    // Matrizes aproximadas para simular daltonismo
     const colorBlindMatrices = {
       protanopia: [
         0.56667, 0.43333, 0.0, 0.55833, 0.44167, 0.0, 0.0, 0.24167, 0.75833,
       ],
-      deuteranopia: [
-        0.625, 0.375, 0.0, 0.7, 0.3, 0.0, 0.0, 0.3, 0.7,
-      ],
-      tritanopia: [
-        0.95, 0.05, 0.0, 0.0, 0.43333, 0.56667, 0.0, 0.475, 0.525,
-      ],
+      deuteranopia: [0.625, 0.375, 0.0, 0.7, 0.3, 0.0, 0.0, 0.3, 0.7],
+      tritanopia: [0.95, 0.05, 0.0, 0.0, 0.43333, 0.56667, 0.0, 0.475, 0.525],
     };
 
     function applyColorMatrix(imgData, mat, strength) {
@@ -594,6 +592,7 @@
       }
     }
 
+    // Blur direcional simples para astigmatismo
     function directionalBlurPass(imgData, dirX, dirY, radius) {
       const { width, height, data } = imgData;
       const out = new Uint8ClampedArray(data.length);
@@ -627,8 +626,8 @@
 
     function astigmatismEffect(baseData, strength) {
       const maxRadius = 10;
-      const r1 = Math.max(1, Math.round(maxRadius * strength));
-      const r2 = Math.max(0, Math.round((maxRadius * strength) / 3));
+      const r1 = Math.max(1, Math.round(maxRadius * strength)); // Horizontal
+      const r2 = Math.max(0, Math.round((maxRadius * strength) / 3)); // Vertical
       let pass1 = directionalBlurPass(baseData, 1, 0, r1);
       if (r2 > 0) pass1 = directionalBlurPass(pass1, 0, 1, r2);
       return pass1;
@@ -703,8 +702,9 @@
       updateIntensityReadout();
     }
 
+    // Rótulos com medidas aproximadas por condição
     function updateIntensityReadout() {
-      const val = state.intensity;
+      const val = state.intensity; // 0..100
       if (state.disease === "miopia") {
         const diopters = -(Math.round((val / 100) * 50) / 10);
         intensityLabel.textContent =
