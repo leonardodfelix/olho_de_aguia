@@ -9,15 +9,16 @@
     content="Trabalho do 6º ano B sobre ODS 3 com simulador de visão: miopia, astigmatismo, daltonismo e catarata." />
   <style>
     :root {
-      --bg: #0e1116;
+      --bg: #0d1016;
       --card: #161a22;
       --text: #e8edf2;
       --muted: #a6b0bf;
-      --accent: #59b5ff;
-      --accent-2: #9bdbff;
       --border: #222838;
       --success: #46d27c;
-      --warning: #ffd166;
+      --brand-1: #f2d074;
+      --brand-2: #d9b24c;
+      --brand-3: #b9912f;
+      --focus: #3b77ff;
     }
 
     * {
@@ -36,13 +37,19 @@
       line-height: 1.5;
     }
 
+    a {
+      color: inherit;
+    }
+
     .container {
-      max-width: 1000px;
+      max-width: 1100px;
       margin: 0 auto;
       padding: 16px 16px 64px;
     }
 
-    header {
+    /* ============== Header/Brand ============== */
+
+    header.site-header {
       padding: 18px 0 12px;
     }
 
@@ -52,25 +59,18 @@
       justify-items: start;
     }
 
-    .logo-row {
-      display: grid;
+    .logo {
+      display: inline-grid;
       gap: 6px;
     }
 
-    /* Logo fluida e responsiva */
-    .logo-eye {
-      width: clamp(180px, 32vw, 320px);
+    .logo-svg {
+      width: clamp(200px, 36vw, 340px);
       height: auto;
       display: block;
     }
 
-    .subtitle {
-      color: var(--muted);
-      margin-top: 8px;
-      font-size: 0.98rem;
-    }
-
-    .pill {
+    .badge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -83,11 +83,31 @@
       font-size: 0.86rem;
     }
 
-    .pill .dot {
+    .badge .dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
       background: var(--success);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-top: 8px;
+      font-size: 0.98rem;
+    }
+
+    /* ============== Layout Principal ============== */
+
+    .layout {
+      display: grid;
+      gap: 16px;
+    }
+
+    @media (min-width: 900px) {
+      .layout {
+        grid-template-columns: 380px 1fr;
+        align-items: start;
+      }
     }
 
     .card {
@@ -99,14 +119,9 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.03);
     }
 
-    .grid {
+    .stack {
       display: grid;
       gap: 12px;
-    }
-
-    .controls {
-      display: grid;
-      gap: 16px;
     }
 
     label {
@@ -114,13 +129,19 @@
       font-size: 0.95rem;
     }
 
-    .row,
-    .viewer {
+    .row {
       display: grid;
-      gap: 12px;
+      gap: 8px;
     }
 
-    .select2 {
+    .row-inline {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .control-2 {
       display: grid;
       grid-template-columns: 1fr auto;
       gap: 8px;
@@ -145,7 +166,7 @@
     input[type="range"]:focus,
     input[type="file"]:focus,
     button:focus {
-      border-color: #3b77ff;
+      border-color: var(--focus);
       box-shadow: 0 0 0 3px rgba(59, 119, 255, 0.15);
     }
 
@@ -187,16 +208,16 @@
       box-shadow: 0 3px 10px rgba(89, 181, 255, 0.25);
     }
 
-    .row-inline {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      align-items: center;
-    }
-
     .hint {
       color: var(--muted);
       font-size: 0.85rem;
+    }
+
+    /* ============== Viewer ============== */
+
+    .viewer {
+      display: grid;
+      gap: 10px;
     }
 
     .stage {
@@ -206,7 +227,7 @@
       border-radius: 14px;
       overflow: hidden;
       aspect-ratio: 16 / 10;
-      min-height: 200px;
+      min-height: 220px;
     }
 
     .stage .img-wrap,
@@ -238,6 +259,12 @@
       gap: 8px;
     }
 
+    @media (min-width: 520px) {
+      .toolbar {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
     .btn {
       display: inline-flex;
       align-items: center;
@@ -255,12 +282,14 @@
       background: #0f1423;
     }
 
-    .footer {
-      margin-top: 12px;
+    .footer-note {
+      margin-top: 4px;
       color: var(--muted);
       font-size: 0.85rem;
       text-align: center;
     }
+
+    /* ============== Conteúdo educativo ============== */
 
     .edu h2 {
       margin: 0 0 8px 0;
@@ -272,12 +301,12 @@
       color: #d7dfeb;
     }
 
-    .edu .ods-pill {
+    .ods-pill {
       background: #0f1a12;
       border-color: #1f3b29;
     }
 
-    .edu .ods-pill .dot {
+    .ods-pill .dot {
       background: var(--success);
     }
 
@@ -285,67 +314,46 @@
       margin: 0;
       padding-left: 18px;
     }
-
-    /* Botões lado a lado em telas médias+ */
-    @media (min-width: 520px) {
-      .toolbar {
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-    }
-
-    /* Layout duas colunas em telas largas */
-    @media (min-width: 780px) {
-      .controls {
-        grid-template-columns: 360px 1fr;
-        gap: 16px;
-        align-items: start;
-      }
-    }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <header>
+    <!-- Header -->
+    <header class="site-header">
       <div class="brand" aria-label="Olho de Águia">
-        <div class="logo-row">
-          <!-- Logo nova, limpa e responsiva -->
-          <svg class="logo-eye" viewBox="0 0 520 220" xmlns="http://www.w3.org/2000/svg" role="img"
+        <div class="logo">
+          <!-- Logo nova: olhos + nome original -->
+          <svg class="logo-svg" viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg" role="img"
             aria-labelledby="logoTitle">
-            <title id="logoTitle">Olho de Águia — ODS 3</title>
-
-            <!-- dourado em gradiente leve (opcional, mas bonito) -->
+            <title id="logoTitle">Olho de Águia</title>
             <defs>
               <linearGradient id="gold" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#f2d074" />
-                <stop offset="55%" stop-color="#d9b24c" />
-                <stop offset="100%" stop-color="#b9912f" />
+                <stop offset="0%" stop-color="var(--brand-1)" />
+                <stop offset="55%" stop-color="var(--brand-2)" />
+                <stop offset="100%" stop-color="var(--brand-3)" />
               </linearGradient>
             </defs>
 
-            <!-- Olhos -->
+            <!-- Olhos estilizados -->
             <g fill="#0b0b0b" stroke="#0b0b0b" stroke-width="2">
-              <!-- esquerdo -->
-              <path d="M95 56c26-24 63-23 88 1-14 1-26 6-34 14 16-4 29 1 39 8-28 2-48 16-78 5-10-4-15-10-15-28Z" />
-              <!-- direito espelhado -->
-              <g transform="translate(425,70) scale(-1,1) translate(-95,-14)">
-                <path d="M95 56c26-24 63-23 88 1-14 1-26 6-34 14 16-4 29 1 39 8-28 2-48 16-78 5-10-4-15-10-15-28Z" />
+              <!-- Esquerdo -->
+              <path d="M170 55c28-24 66-22 92 2-15 0-27 6-35 14 16-3 30 1 40 8-28 2-50 16-81 5-10-4-16-10-16-29Z" />
+              <!-- Direito (espelho) -->
+              <g transform="translate(470,67) scale(-1,1) translate(-170,-12)">
+                <path d="M170 55c28-24 66-22 92 2-15 0-27 6-35 14 16-3 30 1 40 8-28 2-50 16-81 5-10-4-16-10-16-29Z" />
               </g>
             </g>
 
-            <!-- Texto -->
-            <g font-family="Georgia, 'Times New Roman', serif" text-anchor="middle" fill="url(#gold)"
-              style="letter-spacing: 0.5px">
-              <text x="260" y="106" font-size="70" font-weight="700">LH</text>
-              <text x="260" y="140" font-size="40" font-weight="700">DE</text>
-              <text x="260" y="190" font-size="62" font-weight="700">
-                ÁGUIA
+            <!-- Título “Olho de Águia” -->
+            <g font-family="Georgia, 'Times New Roman', serif" text-anchor="middle" fill="url(#gold)">
+              <text x="320" y="120" font-size="44" font-weight="800">
+                OLHO DE ÁGUIA
               </text>
             </g>
           </svg>
 
-          <span class="pill ods-pill" title="Objetivo de Desenvolvimento Sustentável 3">
+          <span class="badge ods-pill" title="ODS 3: Saúde e Bem-Estar">
             <span class="dot"></span>
             ODS 3: Saúde e Bem-Estar
           </span>
@@ -358,12 +366,13 @@
       </div>
     </header>
 
-    <main class="controls">
-      <!-- Coluna esquerda: controles, upload e simulador -->
-      <section class="card grid">
+    <!-- Layout principal: coluna de controles + coluna livre (texto/explicações) -->
+    <main class="layout">
+      <!-- Coluna esquerda -->
+      <section class="card stack" aria-label="Controles do simulador">
         <div class="row">
           <label for="disease">Condição</label>
-          <div class="select2">
+          <div class="control-2">
             <select id="disease" aria-label="Selecione a condição">
               <option value="miopia" selected>Miopia</option>
               <option value="astigmatismo">Astigmatismo</option>
@@ -377,9 +386,7 @@
         </div>
 
         <div class="row" id="intensityRow">
-          <label for="intensityLabel" id="intensityTitle">
-            Intensidade
-          </label>
+          <label for="intensityLabel" id="intensityTitle">Intensidade</label>
           <div class="row-inline">
             <input id="intensity" type="range" min="0" max="100" value="40" step="1" aria-labelledby="intensityTitle" />
             <span class="hint" id="intensityLabel">40%</span>
@@ -408,9 +415,9 @@
           </div>
         </div>
 
-        <!-- Viewer logo após o upload -->
-        <div class="viewer">
-          <div class="card stage" id="stage">
+        <!-- Viewer -->
+        <div class="viewer" aria-label="Simulador">
+          <div class="stage" id="stage">
             <div class="img-wrap">
               <img id="baseImg" alt="Imagem demonstrativa para simulação visual"
                 src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1600&auto=format&fit=crop"
@@ -428,12 +435,15 @@
             </button>
           </div>
 
-          <div class="footer">
+          <p class="footer-note">
             Nota: Simulação educativa aproximada; não substitui avaliação
             profissional.
-          </div>
+          </p>
         </div>
+      </section>
 
+      <!-- Coluna direita: conteúdo educativo -->
+      <section class="stack" aria-label="Conteúdo educativo">
         <div class="card edu">
           <h2>ODS 3: Saúde e Bem-Estar</h2>
           <p>
@@ -442,29 +452,12 @@
             ajuda no aprendizado, segurança e qualidade de vida.
           </p>
           <ul>
-            <li>
-              Faça exames de vista regularmente e use óculos quando
-              recomendados.
-            </li>
-            <li>
-              Proteja os olhos do sol com boné/óculos com proteção UV.
-            </li>
-            <li>
-              Mantenha distância adequada de telas e faça pausas: regra
-              20-20-20.
-            </li>
-            <li>
-              Tenha alimentação equilibrada (vitaminas A, C, E ajudam a
-              visão).
-            </li>
-            <li>
-              Procure orientação médica se notar dificuldade para enxergar.
-            </li>
+            <li>Faça exames de vista regularmente e use óculos quando indicado.</li>
+            <li>Proteja os olhos do sol com boné/óculos com proteção UV.</li>
+            <li>Mantenha distância de telas e aplique a regra 20-20-20.</li>
+            <li>Tenha alimentação equilibrada (vitaminas A, C, E ajudam).</li>
+            <li>Procure orientação médica ao notar dificuldade visual.</li>
           </ul>
-          <p class="hint">
-            Este simulador mostra aproximadamente como algumas condições
-            visuais podem afetar a forma como vemos imagens.
-          </p>
         </div>
 
         <div class="card group-card">
@@ -481,9 +474,6 @@
           </ul>
         </div>
       </section>
-
-      <!-- Coluna direita (vazia por enquanto, pode receber mais conteúdo no futuro) -->
-      <div></div>
     </main>
   </div>
 
@@ -556,7 +546,6 @@
       ctx.drawImage(img, dx, dy, dw, dh);
     }
 
-    // Matrizes aproximadas para simular daltonismo
     const colorBlindMatrices = {
       protanopia: [
         0.56667, 0.43333, 0.0, 0.55833, 0.44167, 0.0, 0.0, 0.24167, 0.75833,
@@ -592,7 +581,6 @@
       }
     }
 
-    // Blur direcional simples para astigmatismo
     function directionalBlurPass(imgData, dirX, dirY, radius) {
       const { width, height, data } = imgData;
       const out = new Uint8ClampedArray(data.length);
@@ -626,8 +614,8 @@
 
     function astigmatismEffect(baseData, strength) {
       const maxRadius = 10;
-      const r1 = Math.max(1, Math.round(maxRadius * strength)); // Horizontal
-      const r2 = Math.max(0, Math.round((maxRadius * strength) / 3)); // Vertical
+      const r1 = Math.max(1, Math.round(maxRadius * strength));
+      const r2 = Math.max(0, Math.round((maxRadius * strength) / 3));
       let pass1 = directionalBlurPass(baseData, 1, 0, r1);
       if (r2 > 0) pass1 = directionalBlurPass(pass1, 0, 1, r2);
       return pass1;
@@ -636,28 +624,26 @@
     function cataractEffect(imgData, strength) {
       const w = canvas.width;
       const h = canvas.height;
-      const px = Math.round(2 + strength * 6);
+      thePx = Math.round(2 + strength * 6);
       const off = document.createElement("canvas");
       off.width = w;
       off.height = h;
       const octx = off.getContext("2d");
-      octx.filter = `blur(${px}px)`;
+      octx.filter = `blur(${thePx}px)`;
       octx.drawImage(canvas, 0, 0, w, h);
       let blurred = octx.getImageData(0, 0, w, h);
 
       const d = blurred.data;
       const haze = 0.1 + strength * 0.35;
       const contrast = 1 - strength * 0.4;
-      const midpoint = 128;
+      const mid = 128;
 
       for (let i = 0; i < d.length; i += 4) {
-        d[i] = (d[i] + (255 - d[i]) * haze - midpoint) * contrast + midpoint;
+        d[i] = (d[i] + (255 - d[i]) * haze - mid) * contrast + mid;
         d[i + 1] =
-          (d[i + 1] + (255 - d[i + 1]) * haze - midpoint) * contrast +
-          midpoint;
+          (d[i + 1] + (255 - d[i + 1]) * haze - mid) * contrast + mid;
         d[i + 2] =
-          (d[i + 2] + (255 - d[i + 2]) * haze - midpoint) * contrast +
-          midpoint;
+          (d[i + 2] + (255 - d[i + 2]) * haze - mid) * contrast + mid;
       }
       return blurred;
     }
@@ -702,9 +688,8 @@
       updateIntensityReadout();
     }
 
-    // Rótulos com medidas aproximadas por condição
     function updateIntensityReadout() {
-      const val = state.intensity; // 0..100
+      const val = state.intensity;
       if (state.disease === "miopia") {
         const diopters = -(Math.round((val / 100) * 50) / 10);
         intensityLabel.textContent =
@@ -738,11 +723,7 @@
 
     function updateUIForDisease() {
       const d = state.disease;
-      if (d === "daltonismo") {
-        typeRow.style.display = "";
-      } else {
-        typeRow.style.display = "none";
-      }
+      typeRow.style.display = d === "daltonismo" ? "" : "none";
       updateIntensityReadout();
     }
 
