@@ -499,7 +499,7 @@
 
     const state = {
       disease: "miopia",
-      intensity: 40, // 0..100
+      intensity: 40,
       colorType: "deuteranopia",
       showProcessed: true,
       image: null,
@@ -520,11 +520,11 @@
     }
 
     function loadImageFromFile(file) {
-      return new Promise((resolve, reject) => {
+      return new Promise(function (resolve, reject) {
         const url = URL.createObjectURL(file);
         const img = new Image();
         img.crossOrigin = "anonymous";
-        img.onload = () => {
+        img.onload = function () {
           URL.revokeObjectURL(url);
           resolve(img);
         };
@@ -556,7 +556,10 @@
 
     function applyColorMatrix(imgData, mat, strength) {
       const d = imgData.data;
-      const [m00, m01, m02, m10, m11, m12, m20, m21, m22] = mat;
+      const m00 = mat[0], m01 = mat[1], m02 = mat[2];
+      const m10 = mat[3], m11 = mat[4], m12 = mat[5];
+      const m20 = mat[6], m21 = mat[7], m22 = mat[8];
+
       for (let i = 0; i < d.length; i += 4) {
         const r = d[i];
         const g = d[i + 1];
@@ -571,26 +574,76 @@
       return imgData;
     }
 
-    function clearCanvasFilter() {
-      ctx.filter = "none";
+    // Safari-compatible blur implementation
+    function applyBlurEffect(img, blurAmount) {
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      const rect = stage.getBoundingClientRect();
+
+      tempCanvas.width = rect.width;
+      tempCanvas.height = rect.height;
+
+      // Multiple passes for blur effect (Safari fallback)
+      const passes = Math.max(1, Math.floor(blurAmount / 2));
+
+      tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+
+      for (let i = 0; i < passes; i++) {
+        const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+        const blurred = simpleBlur(imgData, 2);
+        tempCtx.putImageData(blurred, 0, 0);
+      }
+
+      return tempCanvas;
     }
 
-    function applyCanvasBlur(amountPx) {
-      if ("filter" in ctx) {
-        ctx.filter = `blur(${amountPx}px)`;
+    function simpleBlur(imgData, radius) {
+      const pixels = imgData.data;
+      const width = imgData.width;
+      const height = imgData.height;
+      const output = new Uint8ClampedArray(pixels.length);
+
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          let r = 0, g = 0, b = 0, a = 0, count = 0;
+
+          for (let dy = -radius; dy <= radius; dy++) {
+            for (let dx = -radius; dx <= radius; dx++) {
+              const nx = x + dx;
+              const ny = y + dy;
+
+              if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                const idx = (ny * width + nx) * 4;
+                r += pixels[idx];
+                g += pixels[idx + 1];
+                b += pixels[idx + 2];
+                a += pixels[idx + 3];
+                count++;
+              }
+            }
+          }
+
+          const idx = (y * width + x) * 4;
+          output[idx] = r / count;
+          output[idx + 1] = g / count;
+          output[idx + 2] = b / count;
+          output[idx + 3] = a / count;
+        }
       }
+
+      return new ImageData(output, width, height);
     }
 
     function directionalBlurPass(imgData, dirX, dirY, radius) {
-      const { width, height, data } = imgData;
+      const width = imgData.width;
+      const height = imgData.height;
+      const data = imgData.data;
       const out = new Uint8ClampedArray(data.length);
+
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
-          let r = 0,
-            g = 0,
-            b = 0,
-            a = 0,
-            wsum = 0;
+          let r = 0, g = 0, b = 0, a = 0, wsum = 0;
+
           for (let t = -radius; t <= radius; t++) {
             const sx = Math.round(x + dirX * t);
             const sy = Math.round(y + dirY * t);
@@ -622,66 +675,53 @@
     }
 
     function cataractEffect(imgData, strength) {
-      const w = canvas.width;
-      const h = canvas.height;
-      thePx = Math.round(2 + strength * 6);
-      const off = document.createElement("canvas");
-      off.width = w;
-      off.height = h;
-      const octx = off.getContext("2d");
-      octx.filter = `blur(${thePx}px)`;
-      octx.drawImage(canvas, 0, 0, w, h);
-      let blurred = octx.getImageData(0, 0, w, h);
-
-      const d = blurred.data;
+      const d = imgData.data;
       const haze = 0.1 + strength * 0.35;
       const contrast = 1 - strength * 0.4;
       const mid = 128;
 
       for (let i = 0; i < d.length; i += 4) {
         d[i] = (d[i] + (255 - d[i]) * haze - mid) * contrast + mid;
-        d[i + 1] =
-          (d[i + 1] + (255 - d[i + 1]) * haze - mid) * contrast + mid;
-        d[i + 2] =
-          (d[i + 2] + (255 - d[i + 2]) * haze - mid) * contrast + mid;
+        d[i + 1] = (d[i + 1] + (255 - d[i + 1]) * haze - mid) * contrast + mid;
+        d[i + 2] = (d[i + 2] + (255 - d[i + 2]) * haze - mid) * contrast + mid;
       }
-      return blurred;
+      return imgData;
     }
 
     function render() {
       resizeCanvasToStage();
       const img = state.image || baseImg;
-
-      clearCanvasFilter();
-      imageToCanvas(img);
-
+      const strength = clamp(state.intensity / 100, 0, 1);
       const w = canvas.width;
       const h = canvas.height;
-      const strength = clamp(state.intensity / 100, 0, 1);
+
+      ctx.clearRect(0, 0, w, h);
 
       if (state.disease === "miopia") {
-        clearCanvasFilter();
-        ctx.clearRect(0, 0, w, h);
-        applyCanvasBlur(Math.round(strength * 10));
+        const blurAmount = Math.round(strength * 10);
+        if (blurAmount > 0) {
+          const blurredCanvas = applyBlurEffect(img, blurAmount);
+          ctx.drawImage(blurredCanvas, 0, 0, w, h);
+        } else {
+          imageToCanvas(img);
+        }
+      } else {
         imageToCanvas(img);
-        clearCanvasFilter();
-      } else if (state.disease === "astigmatismo") {
         let imgData = ctx.getImageData(0, 0, w, h);
-        imgData = astigmatismEffect(imgData, strength);
+
+        if (state.disease === "astigmatismo") {
+          imgData = astigmatismEffect(imgData, strength);
+        } else if (state.disease === "daltonismo") {
+          imgData = applyColorMatrix(
+            imgData,
+            colorBlindMatrices[state.colorType],
+            strength
+          );
+        } else if (state.disease === "catarata") {
+          imgData = cataractEffect(imgData, strength);
+        }
+
         ctx.putImageData(imgData, 0, 0);
-      } else if (state.disease === "daltonismo") {
-        let imgData = ctx.getImageData(0, 0, w, h);
-        imgData = applyColorMatrix(
-          imgData,
-          colorBlindMatrices[state.colorType],
-          strength
-        );
-        ctx.putImageData(imgData, 0, 0);
-      } else if (state.disease === "catarata") {
-        let imgData = ctx.getImageData(0, 0, w, h);
-        ctx.putImageData(imgData, 0, 0);
-        const processed = cataractEffect(imgData, strength);
-        ctx.putImageData(processed, 0, 0);
       }
 
       canvas.style.opacity = state.showProcessed ? "1" : "0";
@@ -692,32 +732,27 @@
       const val = state.intensity;
       if (state.disease === "miopia") {
         const diopters = -(Math.round((val / 100) * 50) / 10);
-        intensityLabel.textContent =
-          diopters === 0 ? "0.00 D" : diopters.toFixed(2) + " D";
+        intensityLabel.textContent = diopters === 0 ? "0.00 D" : diopters.toFixed(2) + " D";
         intensityTitle.textContent = "Miopia (dioptrias aprox.)";
-        intensityHelp.textContent =
-          "Simula o desfoque de longe; valores em dioptrias são ilustrativos.";
+        intensityHelp.textContent = "Simula o desfoque de longe; valores em dioptrias são ilustrativos.";
       } else if (state.disease === "astigmatismo") {
         const maxR = 10;
         const rH = Math.max(1, Math.round((val / 100) * maxR));
         const rV = Math.max(0, Math.round(((val / 100) * maxR) / 3));
-        intensityLabel.textContent = `raio H≈${rH} px / V≈${rV} px`;
+        intensityLabel.textContent = "raio H≈" + rH + " px / V≈" + rV + " px";
         intensityTitle.textContent = "Astigmatismo (desfoque direcional)";
-        intensityHelp.textContent =
-          "Nítido em uma direção e desfocado em outra (valores aproximados).";
+        intensityHelp.textContent = "Nítido em uma direção e desfocado em outra (valores aproximados).";
       } else if (state.disease === "daltonismo") {
-        intensityLabel.textContent = `força ${val}/100`;
+        intensityLabel.textContent = "força " + val + "/100";
         intensityTitle.textContent = "Daltonismo (força da simulação)";
-        intensityHelp.textContent =
-          "Mistura entre a imagem original e a transformada.";
+        intensityHelp.textContent = "Mistura entre a imagem original e a transformada.";
       } else if (state.disease === "catarata") {
         let stageLabel = "leve";
         if (val >= 70) stageLabel = "avançado";
         else if (val >= 40) stageLabel = "moderado";
-        intensityLabel.textContent = `${stageLabel} (${val}/100)`;
+        intensityLabel.textContent = stageLabel + " (" + val + "/100)";
         intensityTitle.textContent = "Catarata (estágio aproximado)";
-        intensityHelp.textContent =
-          "Véu esbranquiçado, menos contraste e leve desfoque.";
+        intensityHelp.textContent = "Véu esbranquiçado, menos contraste e leve desfoque.";
       }
     }
 
@@ -727,37 +762,39 @@
       updateIntensityReadout();
     }
 
-    diseaseEl.addEventListener("change", (e) => {
+    // Event listeners with better compatibility
+    diseaseEl.addEventListener("change", function (e) {
       state.disease = e.target.value;
       updateUIForDisease();
       render();
     });
 
-    intensityEl.addEventListener("input", (e) => {
+    intensityEl.addEventListener("input", function (e) {
       state.intensity = parseInt(e.target.value, 10);
       render();
     });
 
-    typeSelect.addEventListener("change", (e) => {
+    typeSelect.addEventListener("change", function (e) {
       state.colorType = e.target.value;
       render();
     });
 
-    uploadEl.addEventListener("change", async (e) => {
-      const file = e.target.files?.[0];
+    uploadEl.addEventListener("change", function (e) {
+      const files = e.target.files;
+      const file = files && files[0]; // Fixed: removed optional chaining
       if (!file) return;
-      try {
-        const img = await loadImageFromFile(file);
+
+      loadImageFromFile(file).then(function (img) {
         state.image = img;
         baseImg.src = img.src;
         render();
-      } catch (err) {
+      }).catch(function (err) {
         alert("Falha ao carregar a imagem. Tente outro arquivo.");
         console.error(err);
-      }
+      });
     });
 
-    resetBtn.addEventListener("click", () => {
+    resetBtn.addEventListener("click", function () {
       state.disease = "miopia";
       diseaseEl.value = state.disease;
       state.intensity = 40;
@@ -769,20 +806,22 @@
       render();
     });
 
-    toggleViewBtn.addEventListener("click", () => {
+    toggleViewBtn.addEventListener("click", function () {
       state.showProcessed = !state.showProcessed;
       render();
     });
 
-    downloadBtn.addEventListener("click", () => {
+    downloadBtn.addEventListener("click", function () {
       const a = document.createElement("a");
-      a.download = `olho-de-aguia-${state.disease}.png`;
+      a.download = "olho-de-aguia-" + state.disease + ".png";
       a.href = canvas.toDataURL("image/png");
       a.click();
     });
 
     window.addEventListener("resize", render);
     baseImg.addEventListener("load", render);
+
+    // Initialize
     updateUIForDisease();
     render();
   </script>
